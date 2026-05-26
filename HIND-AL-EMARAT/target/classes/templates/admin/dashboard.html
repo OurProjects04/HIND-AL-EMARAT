@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header-head}"></head>
+<body>
+
+<header th:replace="~{fragments/header :: header}"></header>
+
+<!-- Admin navigation subbar for better usability -->
+<div style="background: var(--bg-secondary); border-bottom: 1px solid var(--border-glass); padding: 15px 0;">
+    <div class="container d-flex flex-wrap gap-2">
+        <a th:href="@{/admin/dashboard}" class="btn btn-sm btn-primary">Dashboard</a>
+        <a th:href="@{/admin/products}" class="btn btn-sm btn-secondary">Products</a>
+        <a th:href="@{/admin/categories}" class="btn btn-sm btn-secondary">Categories</a>
+        <a th:href="@{/admin/orders}" class="btn btn-sm btn-secondary">Orders</a>
+        <a th:href="@{/admin/users}" class="btn btn-sm btn-secondary">Customers</a>
+        <a th:href="@{/admin/messages}" class="btn btn-sm btn-secondary">Messages <span class="badge" th:text="${unreadMessages}" style="margin-left: 5px; background: var(--accent-gold); color: #000; font-size: 0.65rem;">0</span></a>
+    </div>
+</div>
+
+<main class="container py-5">
+    <!-- Header -->
+    <div class="admin-dashboard-header">
+        <div>
+            <span class="admin-breadcrumbs">Admin Panel / Dashboard</span>
+            <h1 style="font-family: var(--font-serif); font-size: 2.2rem;">Overview Dashboard</h1>
+        </div>
+        <a th:href="@{/admin/products/add}" class="btn btn-primary"><i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Add Product</a>
+    </div>
+
+    <!-- Success Message -->
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <!-- Stats Grid Row -->
+    <div class="grid stats-grid">
+        <!-- Products count -->
+        <div class="stat-card">
+            <div class="stat-info">
+                <span class="stat-count" th:text="${totalProducts}">0</span>
+                <span class="stat-label">Active Perfumes</span>
+            </div>
+            <div class="stat-icon-wrapper">
+                <i class="fa-solid fa-bottle-droplet"></i>
+            </div>
+        </div>
+
+        <!-- Users count -->
+        <div class="stat-card">
+            <div class="stat-info">
+                <span class="stat-count" th:text="${totalUsers}">0</span>
+                <span class="stat-label">Registered Users</span>
+            </div>
+            <div class="stat-icon-wrapper">
+                <i class="fa-solid fa-users"></i>
+            </div>
+        </div>
+
+        <!-- Orders count -->
+        <div class="stat-card">
+            <div class="stat-info">
+                <span class="stat-count" th:text="${totalOrders}">0</span>
+                <span class="stat-label">Total Orders</span>
+            </div>
+            <div class="stat-icon-wrapper">
+                <i class="fa-solid fa-cart-shopping"></i>
+            </div>
+        </div>
+
+        <!-- Pending Orders count -->
+        <div class="stat-card" style="border-color: rgba(241, 196, 15, 0.2);">
+            <div class="stat-info">
+                <span class="stat-count" th:text="${pendingOrders}" style="color: #f1c40f;">0</span>
+                <span class="stat-label">Pending Orders</span>
+            </div>
+            <div class="stat-icon-wrapper" style="color: #f1c40f;">
+                <i class="fa-solid fa-clock"></i>
+            </div>
+        </div>
+
+        <!-- Unread messages -->
+        <div class="stat-card" th:style="${unreadMessages > 0} ? 'border-color: rgba(201, 168, 76, 0.35);' : ''">
+            <div class="stat-info">
+                <span class="stat-count" th:text="${unreadMessages}" th:style="${unreadMessages > 0} ? 'color: var(--accent-gold);' : ''">0</span>
+                <span class="stat-label">Inquiries</span>
+            </div>
+            <div class="stat-icon-wrapper">
+                <i class="fa-solid fa-envelope-open-text"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Orders Table -->
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h2 class="admin-card-title">Recent Transactions</h2>
+            <a th:href="@{/admin/orders}" class="btn btn-secondary btn-sm">View All Orders</a>
+        </div>
+
+        <div th:if="${#lists.isEmpty(recentOrders)}" style="text-align: center; padding: 40px 0;">
+            <p class="text-muted">No orders found.</p>
+        </div>
+
+        <div class="table-responsive" th:unless="${#lists.isEmpty(recentOrders)}">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Payment</th>
+                        <th>Order Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="order : ${recentOrders}">
+                        <td th:text="${order.orderNumber}" style="font-weight: 600; color: var(--accent-gold);">HAE-123</td>
+                        <td th:text="${order.fullName}">Vikram Singh</td>
+                        <td th:text="'₹' + ${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 0, 'POINT')}">₹3,999</td>
+                        <td th:text="${order.paymentMethod}">COD</td>
+                        <td>
+                            <span class="badge" th:classappend="'badge-' + ${#strings.toLowerCase(order.orderStatus)}" th:text="${order.orderStatus}">PENDING</span>
+                        </td>
+                        <td th:text="${#temporals.format(order.createdAt, 'dd MMM yyyy HH:mm')}">20 May 2026</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>

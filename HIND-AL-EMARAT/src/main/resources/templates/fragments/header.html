@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="header-head">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HIND AL EMARAT - Luxury Indian &amp; Arabian Perfumes</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <!-- FontAwesome icons via CDN for elegant arrows and visual markers -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style -->
+    <link th:href="@{/css/main.css}" rel="stylesheet">
+    <!-- Admin Style if in admin page -->
+    <link th:if="${requestURI.startsWith('/admin')}" th:href="@{/css/admin.css}" rel="stylesheet">
+    
+    <!-- CSRF Tags -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+
+<header th:fragment="header" class="header-nav">
+    <div class="container header-container">
+        <a th:href="@{/}" class="brand-logo">HIND AL EMARAT</a>
+        
+        <nav>
+            <ul class="nav-menu">
+                <li><a th:href="@{/}" class="nav-link" th:classappend="${requestURI == '/'} ? 'active'">Home</a></li>
+                <li><a th:href="@{/products}" class="nav-link" th:classappend="${requestURI.startsWith('/products')} ? 'active'">Products</a></li>
+                <li><a th:href="@{/about}" class="nav-link" th:classappend="${requestURI == '/about'} ? 'active'">About</a></li>
+                <li><a th:href="@{/contact}" class="nav-link" th:classappend="${requestURI == '/contact'} ? 'active'">Contact</a></li>
+                
+                <!-- Admin specific navigation link -->
+                <li sec:authorize="hasRole('ADMIN')">
+                    <a th:href="@{/admin/dashboard}" class="nav-link" th:classappend="${requestURI.startsWith('/admin')} ? 'active'" style="color: var(--accent-gold); font-weight: 600;">Admin Panel</a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="nav-actions">
+            <!-- Cart Icon (Authenticated Users) -->
+            <a th:href="@{/cart}" class="cart-icon-wrapper" sec:authorize="isAuthenticated()" title="View Cart">
+                <i class="fa-solid fa-bag-shopping" style="font-size: 1.25rem;"></i>
+                <span class="cart-badge" th:text="${cartItemCount}">0</span>
+            </a>
+
+            <!-- User Auth Controls -->
+            <div sec:authorize="!isAuthenticated()">
+                <a th:href="@{/login}" class="btn btn-secondary btn-sm" style="margin-right: 10px;">Login</a>
+                <a th:href="@{/register}" class="btn btn-primary btn-sm">Register</a>
+            </div>
+
+            <div sec:authorize="isAuthenticated()" class="d-flex align-center gap-2">
+                <a th:href="@{/profile}" class="nav-link" title="My Profile" style="display: flex; align-items: center; gap: 5px;">
+                    <i class="fa-regular fa-user" style="font-size: 1.1rem;"></i>
+                    <span sec:authentication="name" style="font-size: 0.8rem; text-transform: lowercase;">User</span>
+                </a>
+                <a th:href="@{/orders/my-orders}" class="nav-link" title="My Orders"><i class="fa-solid fa-receipt"></i></a>
+                
+                <!-- Logout handler using POST standard -->
+                <form th:action="@{/logout}" method="POST" style="display: inline;">
+                    <button type="submit" style="cursor: pointer; background: transparent; border: none; color: var(--text-muted); font-size: 0.9rem;" title="Logout">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Hamburger toggle for smaller viewports -->
+            <div class="menu-toggle">&#9776;</div>
+        </div>
+    </div>
+</header>
+
+</body>
+</html>

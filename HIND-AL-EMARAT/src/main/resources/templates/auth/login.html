@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header-head}"></head>
+<body>
+
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="container auth-container" style="max-width: 450px; margin: 0 auto; padding-top: 100px; padding-bottom: 100px;">
+    <div class="glass-card auth-card">
+        <h2 class="section-title auth-title" style="font-size: 2rem; margin-bottom: 25px;">Welcome Back</h2>
+        
+        <!-- Alerts and Messages -->
+        <div th:if="${param.error}" class="alert alert-error">
+            Invalid email or password. Please try again.
+        </div>
+        <div th:if="${param.logout}" class="alert alert-success">
+            You have been successfully logged out.
+        </div>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+        <!-- Login Form POST mapping -->
+        <form th:action="@{/login}" method="POST">
+            <!-- Email -->
+            <div class="form-group">
+                <label class="form-label" for="username">Email Address</label>
+                <input type="email" id="username" name="username" class="form-control" placeholder="admin@hindalemarat.com" required autofocus>
+            </div>
+            
+            <!-- Password -->
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100" style="padding: 14px;">Sign In</button>
+        </form>
+        
+        <!-- Registration Redirect link -->
+        <div style="text-align: center; margin-top: 25px; font-size: 0.9rem;">
+            <span class="text-muted">Don't have an account? </span>
+            <a th:href="@{/register}" style="color: var(--accent-gold); font-weight: 500;">Register Here</a>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>

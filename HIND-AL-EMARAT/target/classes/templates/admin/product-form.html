@@ -1,0 +1,629 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header-head}"></head>
+<body>
+
+<header th:replace="~{fragments/header :: header}"></header>
+
+<!-- Admin navigation subbar -->
+<div style="background: var(--bg-secondary); border-bottom: 1px solid var(--border-glass); padding: 15px 0;">
+    <div class="container d-flex flex-wrap gap-2">
+        <a th:href="@{/admin/dashboard}" class="btn btn-sm btn-secondary">Dashboard</a>
+        <a th:href="@{/admin/products}" class="btn btn-sm btn-primary">Products</a>
+        <a th:href="@{/admin/categories}" class="btn btn-sm btn-secondary">Categories</a>
+        <a th:href="@{/admin/orders}" class="btn btn-sm btn-secondary">Orders</a>
+        <a th:href="@{/admin/users}" class="btn btn-sm btn-secondary">Customers</a>
+        <a th:href="@{/admin/messages}" class="btn btn-sm btn-secondary">Messages</a>
+    </div>
+</div>
+
+<main class="container py-5">
+    <div class="admin-dashboard-header">
+        <div>
+            <span class="admin-breadcrumbs">
+                <a th:href="@{/admin/dashboard}">Dashboard</a> /
+                <a th:href="@{/admin/products}">Products</a> /
+                <span th:text="${product.id != null} ? 'Edit' : 'Add'">Add</span>
+            </span>
+            <h1 style="font-family: var(--font-serif); font-size: 2.2rem;"
+                th:text="${product.id != null} ? 'Edit Perfume' : 'Add New Perfume'">
+                Add Product
+            </h1>
+        </div>
+        <a th:href="@{/admin/products}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left-long" style="margin-right: 8px;"></i> Back to Products
+        </a>
+    </div>
+
+    <!-- Error/Success Messages -->
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <div class="glass-card" style="max-width: 900px; margin: 0 auto;">
+        <form th:action="@{/admin/products/save}" th:object="${product}" method="POST" enctype="multipart/form-data" id="productForm" novalidate>
+
+            <input type="hidden" th:field="*{id}">
+            <input type="hidden" id="removeDemoFlag" name="removeDemo" value="false">
+            <input type="hidden" id="existingDemoId" name="existingDemoId" th:value="${demoProduct != null ? demoProduct.id : ''}">
+
+            <!-- ==================== MAIN PRODUCT IMAGE ==================== -->
+            <div class="form-group">
+                <label class="form-label">Product Image <span style="color: var(--accent-gold);">*</span></label>
+                <input type="file" id="mainImageFile" name="mainImageFile"
+                       class="form-control" accept="image/jpeg,image/jpg,image/png"
+                       th:required="${product.id == null}">
+                <small class="text-muted">Accepted: JPG, JPEG, PNG (Max 5MB)</small>
+                <div id="mainImageError" class="error-message"></div>
+
+                <!-- Image preview for edit mode -->
+                <div id="mainImagePreviewContainer" th:if="${product.id != null and existingImageUrl != null}" style="margin-top: 15px;">
+                    <img th:src="${@fileUploadUtil.resolvePublicUrl(existingImageUrl)}" id="mainImagePreview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px;">
+                    <button type="button" id="removeMainImage" class="btn btn-danger btn-sm" style="margin-top: 5px;">Remove</button>
+                </div>
+            </div>
+
+            <!-- ==================== PERFUME NAME ==================== -->
+            <div class="form-group">
+                <label class="form-label" for="name">Perfume Name <span style="color: var(--accent-gold);">*</span></label>
+                <input type="text" th:field="*{name}" class="form-control" id="name"
+                       placeholder="E.g. Royal Oud Majesty" required minlength="3" maxlength="100">
+                <div id="nameError" class="error-message"></div>
+            </div>
+
+            <!-- ==================== CATEGORY & BOTTLE SIZE ==================== -->
+            <div class="grid grid-2" style="gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="categoryId">Category <span style="color: var(--accent-gold);">*</span></label>
+                    <select th:field="*{categoryId}" class="form-control" id="categoryId" required>
+                        <option value="">Select Category</option>
+                        <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+                    </select>
+                    <div id="categoryError" class="error-message"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="quantityMl">Bottle Size (ML) <span style="color: var(--accent-gold);">*</span></label>
+                    <input type="number" th:field="*{quantityMl}" class="form-control" id="quantityMl"
+                           placeholder="E.g. 100" min="1" max="1000" required>
+                    <small class="text-muted">Used for demo pricing calculation</small>
+                    <div id="quantityMlError" class="error-message"></div>
+                </div>
+            </div>
+
+            <!-- ==================== SIZE LABEL ==================== -->
+            <div class="form-group">
+                <label class="form-label" for="size">Size Label (Display Only) <span style="color: var(--accent-gold);">*</span></label>
+                <input type="text" th:field="*{size}" class="form-control" id="size"
+                       placeholder="E.g. 100ml, 12ml Attar" required maxlength="50">
+                <div id="sizeError" class="error-message"></div>
+            </div>
+
+            <!-- ==================== PRICE SECTION ==================== -->
+            <div class="grid grid-3" style="gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="originalPrice">Original Price (   ) <span style="color: var(--accent-gold);">*</span></label>
+                    <input type="number" step="0.01" th:field="*{originalPrice}" class="form-control" id="originalPrice"
+                           placeholder="2000" min="0.01" max="100000" required>
+                    <small class="text-muted">Before any discount</small>
+                    <div id="originalPriceError" class="error-message"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="discountPercentage">Discount (%)</label>
+                    <input type="number" th:field="*{discountPercentage}" class="form-control" id="discountPercentage"
+                           placeholder="20" min="0" max="100" step="1">
+                    <small class="text-muted">Must be between 0 and 100</small>
+                    <div id="discountError" class="error-message"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="price">Final Price (   )</label>
+                    <input type="number" step="0.01" th:field="*{price}" class="form-control" id="price"
+                           readonly style="background: var(--bg-glass);">
+                    <small class="text-muted">Auto-calculated from discount</small>
+                    <div id="finalPriceError" class="error-message"></div>
+                </div>
+            </div>
+
+            <!-- ==================== STOCK QUANTITY ==================== -->
+            <div class="form-group">
+                <label class="form-label" for="stockQuantity">Stock Quantity <span style="color: var(--accent-gold);">*</span></label>
+                <input type="number" th:field="*{stockQuantity}" class="form-control" id="stockQuantity"
+                       placeholder="25" min="0" max="99999" required>
+                <div id="stockError" class="error-message"></div>
+            </div>
+
+            <!-- ==================== FRAGRANCE NOTES ==================== -->
+            <div class="form-group">
+                <label class="form-label" for="fragranceNotes">Fragrance Notes</label>
+                <input type="text" th:field="*{fragranceNotes}" class="form-control" id="fragranceNotes"
+                       placeholder="Top: Bergamot; Heart: Rose; Base: Oud" maxlength="500">
+                <div id="fragranceError" class="error-message"></div>
+            </div>
+
+            <!-- ==================== DESCRIPTION ==================== -->
+            <div class="form-group">
+                <label class="form-label" for="description">Detailed Description</label>
+                <textarea th:field="*{description}" class="form-control" id="description"
+                          placeholder="Detailed story of the fragrance..." rows="4" maxlength="2000"></textarea>
+                <div id="descriptionError" class="error-message"></div>
+            </div>
+
+            <!-- ==================== ACTIVE & FEATURED ==================== -->
+            <div class="grid grid-2" style="gap: 30px; margin-bottom: 20px;">
+                <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" th:field="*{active}" id="active" style="width: 20px; height: 20px;">
+                    <label class="form-label" style="margin: 0;">Publish to storefront (Active)</label>
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" th:field="*{featured}" id="featured" style="width: 20px; height: 20px;">
+                    <label class="form-label" style="margin: 0;">Display in featured section</label>
+                </div>
+            </div>
+
+            <!-- ==================== DEMO / MINI PACK SECTION (HIDDEN BY DEFAULT) ==================== -->
+            <div class="demo-section" style="margin-top: 40px; padding-top: 30px; border-top: 2px solid var(--border-glass);">
+                <h2 style="font-family: var(--font-serif); font-size: 1.6rem; margin-bottom: 15px; color: var(--accent-gold);">
+                    <i class="fa-solid fa-vial" style="margin-right: 10px;"></i> Demo / Mini Pack
+                </h2>
+                <p class="text-muted" style="margin-bottom: 20px;">Would you like to add a smaller demo/trial pack version of this product?</p>
+
+                <!-- Only buttons visible initially - Demo form is HIDDEN -->
+                <div class="demo-buttons" style="display: flex; gap: 15px;">
+                    <button type="button" id="btnSkipDemo" class="btn btn-secondary">
+                        <i class="fa-solid fa-xmark" style="margin-right: 8px;"></i> Skip Demo Product
+                    </button>
+                    <button type="button" id="btnAddDemo" class="btn btn-primary">
+                        <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Add Demo Product
+                    </button>
+                </div>
+
+                <!-- Demo Form Section - HIDDEN BY DEFAULT (only shows when Add Demo is clicked) -->
+                <div id="demoFormSection" style="display: none; margin-top: 20px; padding: 20px; background: var(--bg-glass); border-radius: 8px; border-left: 3px solid var(--accent-gold);">
+                    <h3 style="font-family: var(--font-serif); margin-bottom: 20px;">Demo Pack Details</h3>
+
+                    <div class="grid grid-2" style="gap: 20px;">
+                        <div class="form-group">
+                            <label class="form-label">Demo Quantity (ML) <span style="color: var(--accent-gold);">*</span></label>
+                            <input type="number" id="demoQuantityMl" name="demoQuantityMl"
+                                   class="form-control" placeholder="E.g. 10" min="1" step="1">
+                            <small class="text-muted">Must be less than or equal to main bottle size</small>
+                            <div id="demoQuantityError" class="error-message"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Demo Stock Quantity <span style="color: var(--accent-gold);">*</span></label>
+                            <input type="number" id="demoStockQuantity" name="demoStockQuantity"
+                                   class="form-control" placeholder="E.g. 50" min="0" max="99999" step="1">
+                            <div id="demoStockError" class="error-message"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2" style="gap: 20px;">
+                        <div class="form-group">
+                            <label class="form-label">Demo Price (   ) <span style="color: var(--accent-gold);">*</span></label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="number" id="demoPriceValue" name="demoPriceValue"
+                                       class="form-control" placeholder="Auto-calculated"
+                                       step="0.01" min="0.01" style="flex: 1;">
+                                <button type="button" id="recalculateDemoPrice" class="btn btn-secondary btn-sm" style="white-space: nowrap;">
+                                    <i class="fa-solid fa-calculator"></i> Recalculate
+                                </button>
+                            </div>
+                            <small class="text-muted">Manually editable or click Recalculate to auto-calculate from main price</small>
+                            <div id="demoPriceError" class="error-message"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Demo Image (Optional)</label>
+                            <input type="file" id="demoImageFile" name="demoImageFile"
+                                   class="form-control" accept="image/jpeg,image/jpg,image/png">
+                            <small class="text-muted">Leave empty to use main product image</small>
+                            <div id="demoImageError" class="error-message"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 15px;">
+                        <input type="checkbox" id="demoActive" name="demoActive"
+                               style="width: 20px; height: 20px;" checked>
+                        <label class="form-label" style="margin: 0;">Make demo pack available for purchase</label>
+                    </div>
+
+                    <div class="price-calculation-info" style="margin-top: 15px; padding: 10px; background: rgba(201,168,76,0.1); border-radius: 4px;">
+                        <small>
+                            <strong>Calculation:</strong> Demo price = (Final Price Ã· Full Quantity ML) Ã— Demo Quantity ML<br>
+                            <strong>Note:</strong> You can manually edit the demo price or click Recalculate to auto-calculate.
+                        </small>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <button type="button" id="btnRemoveDemo" class="btn btn-danger btn-sm">
+                            <i class="fa-solid fa-trash-can" style="margin-right: 8px;"></i> Remove Demo Product
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== FORM ACTIONS ==================== -->
+            <div class="form-actions" style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border-glass);">
+                <a th:href="@{/admin/products}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" id="saveProductBtn" class="btn btn-primary">Save Perfume</button>
+            </div>
+
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+<style>
+    .error-message {
+        color: #e74c3c;
+        font-size: 0.75rem;
+        margin-top: 5px;
+        display: none;
+    }
+    .error-message.visible {
+        display: block;
+    }
+    input:invalid, select:invalid {
+        border-color: #e74c3c;
+    }
+</style>
+
+<script th:inline="javascript">
+    // ==================== PRICE CALCULATION ====================
+    const originalPriceInput = document.getElementById('originalPrice');
+    const discountPercentInput = document.getElementById('discountPercentage');
+    const finalPriceInput = document.getElementById('price');
+
+    function calculateFinalPrice() {
+        const originalPrice = parseFloat(originalPriceInput?.value) || 0;
+        let discountPercent = parseFloat(discountPercentInput?.value) || 0;
+
+        if (discountPercent < 0) {
+            discountPercentInput.value = 0;
+            discountPercent = 0;
+            showError('discountError', 'Discount cannot be negative');
+        } else if (discountPercent > 100) {
+            discountPercentInput.value = 100;
+            discountPercent = 100;
+            showError('discountError', 'Discount cannot exceed 100%');
+        } else {
+            hideError('discountError');
+        }
+
+        if (originalPrice > 0) {
+            const discountAmount = (originalPrice * discountPercent) / 100;
+            const finalPrice = originalPrice - discountAmount;
+            finalPriceInput.value = finalPrice.toFixed(2);
+
+            if (finalPrice <= 0) {
+                showError('finalPriceError', 'Final price must be greater than 0');
+            } else {
+                hideError('finalPriceError');
+            }
+        } else {
+            finalPriceInput.value = '';
+        }
+
+        // Recalculate demo price if demo section is visible
+        if (demoFormSection && demoFormSection.style.display === 'block' && autoPriceMode) {
+            autoCalculateDemoPrice();
+        }
+    }
+
+    // ==================== DEMO PRICE CALCULATION ====================
+    let autoPriceMode = true;
+    const demoPriceInput = document.getElementById('demoPriceValue');
+    const recalculateBtn = document.getElementById('recalculateDemoPrice');
+
+    function autoCalculateDemoPrice() {
+        if (!autoPriceMode) return;
+
+        const finalPrice = parseFloat(finalPriceInput?.value) || 0;
+        const mainQuantityMl = parseInt(document.getElementById('quantityMl')?.value) || 0;
+        const demoQuantityMl = parseInt(document.getElementById('demoQuantityMl')?.value) || 0;
+
+        if (finalPrice > 0 && mainQuantityMl > 0 && demoQuantityMl > 0) {
+            if (demoQuantityMl > mainQuantityMl) {
+                showError('demoQuantityError', 'Demo quantity cannot exceed main bottle size (' + mainQuantityMl + 'ml)');
+                return;
+            } else {
+                hideError('demoQuantityError');
+            }
+
+            const pricePerMl = finalPrice / mainQuantityMl;
+            const calculatedPrice = pricePerMl * demoQuantityMl;
+            const roundedPrice = Math.round(calculatedPrice * 100) / 100;
+
+            if (demoPriceInput) {
+                demoPriceInput.value = roundedPrice.toFixed(2);
+                hideError('demoPriceError');
+            }
+        } else if (demoQuantityMl > 0) {
+            if (demoPriceInput) demoPriceInput.value = '';
+        }
+    }
+
+    // Recalculate button click
+    if (recalculateBtn) {
+        recalculateBtn.addEventListener('click', function() {
+            autoPriceMode = true;
+            autoCalculateDemoPrice();
+            showTemporaryMessage('demoPriceError', 'âœ“ Price recalculated from main product!', 'success');
+        });
+    }
+
+    // Manual editing allowed
+    if (demoPriceInput) {
+        demoPriceInput.addEventListener('focus', function() {
+            autoPriceMode = false;
+        });
+
+        demoPriceInput.addEventListener('input', function() {
+            autoPriceMode = false;
+            const value = parseFloat(this.value);
+            if (!isNaN(value) && value > 0) {
+                hideError('demoPriceError');
+            } else if (this.value !== '') {
+                showError('demoPriceError', 'Please enter a valid price greater than 0');
+            }
+        });
+    }
+
+    // ==================== DEMO SECTION TOGGLE (HIDDEN BY DEFAULT) ====================
+    const demoFormSection = document.getElementById('demoFormSection');
+    const btnAddDemo = document.getElementById('btnAddDemo');
+    const btnSkipDemo = document.getElementById('btnSkipDemo');
+    const btnRemoveDemo = document.getElementById('btnRemoveDemo');
+
+    function showDemoForm() {
+        if (demoFormSection) {
+            demoFormSection.style.display = 'block';
+            autoPriceMode = true;
+            autoCalculateDemoPrice();
+        }
+    }
+
+    function hideDemoForm() {
+        if (demoFormSection) {
+            demoFormSection.style.display = 'none';
+            // Clear all demo fields
+            const demoQuantity = document.getElementById('demoQuantityMl');
+            const demoStock = document.getElementById('demoStockQuantity');
+            const demoImage = document.getElementById('demoImageFile');
+            if (demoQuantity) demoQuantity.value = '';
+            if (demoStock) demoStock.value = '';
+            if (demoPriceInput) demoPriceInput.value = '';
+            document.getElementById('removeDemoFlag').value = 'false';
+            autoPriceMode = true;
+        }
+    }
+
+    function removeDemo() {
+        hideDemoForm();
+        document.getElementById('removeDemoFlag').value = 'true';
+    }
+
+    // Button event listeners
+    if (btnAddDemo) btnAddDemo.addEventListener('click', showDemoForm);
+    if (btnSkipDemo) btnSkipDemo.addEventListener('click', hideDemoForm);
+    if (btnRemoveDemo) btnRemoveDemo.addEventListener('click', removeDemo);
+
+    // ==================== VALIDATION FUNCTIONS ====================
+    function showError(elementId, message) {
+        const errorDiv = document.getElementById(elementId);
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            errorDiv.classList.add('visible');
+        }
+    }
+
+    function hideError(elementId) {
+        const errorDiv = document.getElementById(elementId);
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+            errorDiv.classList.remove('visible');
+        }
+    }
+
+    function showTemporaryMessage(elementId, message, type) {
+        const errorDiv = document.getElementById(elementId);
+        if (errorDiv) {
+            const originalColor = errorDiv.style.color;
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            errorDiv.style.color = type === 'success' ? '#2ecc71' : '#e74c3c';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+                errorDiv.style.color = originalColor;
+            }, 2000);
+        }
+    }
+
+    // ==================== FORM VALIDATION ON SUBMIT ====================
+    document.getElementById('productForm')?.addEventListener('submit', function(e) {
+        let isValid = true;
+
+        // Main product validations
+        const name = document.getElementById('name')?.value.trim();
+        if (!name || name.length < 3) {
+            showError('nameError', 'Product name is required (minimum 3 characters)');
+            isValid = false;
+        } else {
+            hideError('nameError');
+        }
+
+        const category = document.getElementById('categoryId')?.value;
+        if (!category) {
+            showError('categoryError', 'Please select a category');
+            isValid = false;
+        } else {
+            hideError('categoryError');
+        }
+
+        const quantityMl = parseInt(document.getElementById('quantityMl')?.value);
+        if (isNaN(quantityMl) || quantityMl <= 0) {
+            showError('quantityMlError', 'Bottle size must be greater than 0');
+            isValid = false;
+        } else {
+            hideError('quantityMlError');
+        }
+
+        const size = document.getElementById('size')?.value.trim();
+        if (!size) {
+            showError('sizeError', 'Size label is required');
+            isValid = false;
+        } else {
+            hideError('sizeError');
+        }
+
+        const originalPrice = parseFloat(document.getElementById('originalPrice')?.value);
+        if (isNaN(originalPrice) || originalPrice <= 0) {
+            showError('originalPriceError', 'Original price must be greater than 0');
+            isValid = false;
+        } else {
+            hideError('originalPriceError');
+        }
+
+        const stock = parseInt(document.getElementById('stockQuantity')?.value);
+        if (isNaN(stock) || stock < 0) {
+            showError('stockError', 'Stock quantity cannot be negative');
+            isValid = false;
+        } else {
+            hideError('stockError');
+        }
+
+        const isEdit = document.getElementById('id')?.value;
+        const mainImage = document.getElementById('mainImageFile')?.files[0];
+        if (!isEdit && !mainImage) {
+            showError('mainImageError', 'Please upload a product image');
+            isValid = false;
+        } else {
+            hideError('mainImageError');
+        }
+
+        // Demo product validations (only if demo section is visible)
+        if (demoFormSection && demoFormSection.style.display === 'block') {
+            const demoQuantity = parseInt(document.getElementById('demoQuantityMl')?.value);
+            const demoStock = parseInt(document.getElementById('demoStockQuantity')?.value);
+            const mainQuantity = parseInt(document.getElementById('quantityMl')?.value);
+            const demoPrice = parseFloat(demoPriceInput?.value);
+
+            if (isNaN(demoQuantity) || demoQuantity <= 0) {
+                showError('demoQuantityError', 'Demo quantity is required and must be greater than 0');
+                isValid = false;
+            } else if (demoQuantity > mainQuantity) {
+                showError('demoQuantityError', 'Demo quantity cannot exceed main bottle size (' + mainQuantity + 'ml)');
+                isValid = false;
+            } else {
+                hideError('demoQuantityError');
+            }
+
+            if (isNaN(demoStock) || demoStock < 0) {
+                showError('demoStockError', 'Demo stock quantity cannot be negative');
+                isValid = false;
+            } else {
+                hideError('demoStockError');
+            }
+
+            if (isNaN(demoPrice) || demoPrice <= 0) {
+                showError('demoPriceError', 'Demo price must be greater than 0');
+                isValid = false;
+            } else {
+                hideError('demoPriceError');
+            }
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+            const firstError = document.querySelector('.error-message.visible');
+            if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+
+    // ==================== EVENT LISTENERS ====================
+    if (originalPriceInput) originalPriceInput.addEventListener('input', calculateFinalPrice);
+    if (discountPercentInput) discountPercentInput.addEventListener('input', calculateFinalPrice);
+    if (finalPriceInput) finalPriceInput.addEventListener('change', function() {
+        if (demoFormSection && demoFormSection.style.display === 'block' && autoPriceMode) {
+            autoCalculateDemoPrice();
+        }
+    });
+
+    document.getElementById('quantityMl')?.addEventListener('input', function() {
+        if (demoFormSection && demoFormSection.style.display === 'block' && autoPriceMode) {
+            autoCalculateDemoPrice();
+        }
+    });
+
+    document.getElementById('demoQuantityMl')?.addEventListener('input', function() {
+        if (demoFormSection && demoFormSection.style.display === 'block' && autoPriceMode) {
+            autoCalculateDemoPrice();
+        }
+    });
+
+    document.getElementById('stockQuantity')?.addEventListener('input', function() {
+        const value = parseInt(this.value);
+        if (isNaN(value) || value < 0) {
+            showError('stockError', 'Stock quantity cannot be negative');
+        } else {
+            hideError('stockError');
+        }
+    });
+
+    // Image preview
+    document.getElementById('mainImageFile')?.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                showError('mainImageError', 'File size must be less than 5MB');
+                this.value = '';
+                return;
+            }
+            hideError('mainImageError');
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                let preview = document.getElementById('mainImagePreview');
+                if (!preview) {
+                    const container = document.createElement('div');
+                    container.id = 'mainImagePreviewContainer';
+                    container.style.marginTop = '15px';
+                    container.innerHTML = '<img id="mainImagePreview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px;"><button type="button" id="removeMainImage" class="btn btn-danger btn-sm" style="margin-top: 5px;">Remove</button>';
+                    document.querySelector('.form-group:first-child').appendChild(container);
+                    preview = document.getElementById('mainImagePreview');
+                    document.getElementById('removeMainImage')?.addEventListener('click', function() {
+                        document.getElementById('mainImageFile').value = '';
+                        document.getElementById('mainImagePreviewContainer')?.remove();
+                    });
+                }
+                preview.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Check if editing existing product with demo - Auto show demo form
+    document.addEventListener('DOMContentLoaded', function() {
+        const existingDemoId = document.getElementById('existingDemoId')?.value;
+        if (existingDemoId && existingDemoId !== '') {
+            // Auto-show demo form when editing a product that already has a demo
+            showDemoForm();
+            // Populate existing demo data if available
+            const demoProductData = /*[[${demoProduct}]]*/ null;
+            if (demoProductData && demoProductData.quantityMl) {
+                document.getElementById('demoQuantityMl').value = demoProductData.quantityMl;
+                document.getElementById('demoStockQuantity').value = demoProductData.stockQuantity;
+                if (demoPriceInput) demoPriceInput.value = demoProductData.price;
+                document.getElementById('demoActive').checked = demoProductData.active;
+            }
+        }
+    });
+
+    calculateFinalPrice();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header-head}"></head>
+<body>
+
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="container py-5">
+    <h1 class="section-title">Checkout</h1>
+
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <div class="grid" style="grid-template-columns: 1.8fr 1.2fr; align-items: start;" th:unless="${cart == null or #lists.isEmpty(cart.cartItems)}">
+        <!-- Shipping Details Form -->
+        <form th:action="@{/checkout/place-order}" th:object="${checkout}" method="POST">
+            <div class="glass-card">
+                <h3 style="font-family: var(--font-serif); color: var(--accent-gold); margin-bottom: 25px; border-bottom: 1px solid var(--border-glass); padding-bottom: 10px;">Shipping Details</h3>
+                
+                <div class="form-group">
+                    <label class="form-label" for="fullName">Full Name</label>
+                    <input type="text" th:field="*{fullName}" class="form-control" placeholder="E.g. Vikram Singh" required>
+                    <span th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}" style="color: #e74c3c; font-size: 0.8rem;"></span>
+                </div>
+
+                <div class="grid grid-2" style="gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Address</label>
+                        <input type="email" th:field="*{email}" class="form-control" placeholder="vikram@example.com" required>
+                        <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" style="color: #e74c3c; font-size: 0.8rem;"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="phone">Phone Number</label>
+                        <input type="tel" th:field="*{phone}" class="form-control" placeholder="9876543210" required>
+                        <span th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}" style="color: #e74c3c; font-size: 0.8rem;"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="address">Delivery Address</label>
+                    <textarea th:field="*{address}" class="form-control" placeholder="Flat No, Building, Street Name..." required></textarea>
+                    <span th:if="${#fields.hasErrors('address')}" th:errors="*{address}" style="color: #e74c3c; font-size: 0.8rem;"></span>
+                </div>
+
+                <div class="grid grid-3" style="gap: 15px;">
+                    <div class="form-group">
+                        <label class="form-label" for="city">City</label>
+                        <input type="text" th:field="*{city}" class="form-control" placeholder="Mumbai" required>
+                        <span th:if="${#fields.hasErrors('city')}" th:errors="*{city}" style="color: #e74c3c; font-size: 0.8rem;"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="state">State</label>
+                        <input type="text" th:field="*{state}" class="form-control" placeholder="Maharashtra" required>
+                        <span th:if="${#fields.hasErrors('state')}" th:errors="*{state}" style="color: #e74c3c; font-size: 0.8rem;"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="pincode">Pincode</label>
+                        <input type="text" th:field="*{pincode}" class="form-control" placeholder="400001" required>
+                        <span th:if="${#fields.hasErrors('pincode')}" th:errors="*{pincode}" style="color: #e74c3c; font-size: 0.8rem;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Method Form Card -->
+            <div class="glass-card mt-3">
+                <h3 style="font-family: var(--font-serif); color: var(--accent-gold); margin-bottom: 20px; border-bottom: 1px solid var(--border-glass); padding-bottom: 10px;">Payment Method</h3>
+                
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 15px;">
+                    <!-- COD option -->
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="radio" th:field="*{paymentMethod}" value="COD" checked style="width: 18px; height: 18px; accent-color: var(--accent-gold);">
+                        <div>
+                            <strong>Cash on Delivery (COD)</strong>
+                            <p class="text-muted" style="font-size: 0.8rem; margin: 0;">Pay in cash when your perfumes arrive at your doorstep.</p>
+                        </div>
+                    </label>
+
+                    <!-- Online Payment option -->
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="radio" th:field="*{paymentMethod}" value="ONLINE" style="width: 18px; height: 18px; accent-color: var(--accent-gold);">
+                        <div>
+                            <strong>Demo Online Payment (Card / UPI)</strong>
+                            <p class="text-muted" style="font-size: 0.8rem; margin: 0;">Simulate payment processing via demo gateway (Razorpay ready structure).</p>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Demo Card Fields (Toggled by cart.js) -->
+                <div id="demo-card-block" class="demo-payment-card" style="display: none;">
+                    <h4 style="font-family: var(--font-sans); color: var(--accent-gold); font-size: 0.85rem; text-transform: uppercase; margin-bottom: 15px;">Demo Card Information</h4>
+                    <p class="text-muted" style="font-size: 0.75rem; margin-bottom: 15px;"><i class="fa-solid fa-circle-info"></i> This is a simulated transaction. No real money will be charged.</p>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Cardholder Name</label>
+                        <input type="text" class="form-control" placeholder="E.g. Vikram Singh">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Card Number</label>
+                        <input type="text" class="form-control" placeholder="4111 2222 3333 4444" maxlength="19">
+                    </div>
+                    <div class="grid grid-2" style="gap: 15px;">
+                        <div class="form-group">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="text" class="form-control" placeholder="MM/YY" maxlength="5">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">CVV</label>
+                            <input type="password" class="form-control" placeholder="***" maxlength="3">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-lg w-100 mt-3" style="padding: 16px;">Place Your Order</button>
+        </form>
+
+        <!-- Right Side: Order Summary -->
+        <div class="glass-card">
+            <h3 style="font-family: var(--font-serif); color: var(--accent-gold); margin-bottom: 20px; border-bottom: 1px solid var(--border-glass); padding-bottom: 10px;">Order Summary</h3>
+            
+            <!-- Items scroll list -->
+            <div style="max-height: 280px; overflow-y: auto; margin-bottom: 20px; padding-right: 5px;">
+                <div th:each="item : ${cart.cartItems}" style="display: flex; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 15px;">
+                    <img th:src="${@fileUploadUtil.resolvePublicUrl(item.product.imageUrl)}" th:alt="${item.product.name}" style="width: 50px; height: 60px; object-fit: cover; border-radius: 4px;">
+                    <div style="flex-grow: 1;">
+                        <h4 th:text="${item.product.name}" style="font-family: var(--font-serif); font-size: 0.95rem; margin-bottom: 2px;">Royal Oud Majesty</h4>
+                        <p class="text-muted" th:text="${item.quantity} + ' x    ' + ${#numbers.formatDecimal(item.product.discountPrice > 0 ? item.product.discountPrice : item.product.price, 1, 'COMMA', 0, 'POINT')}" style="font-size: 0.8rem; margin: 0;"></p>
+                        <th:block th:if="${item.product.isDemoProduct()}">
+                            <span class="badge" style="background-color: #7c3aed; color: #fff; font-size: 0.6rem; margin-top: 4px; display: inline-block;">Demo Pack</span>
+                        </th:block>
+                    </div>
+                    <span th:text="'   ' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 'COMMA', 0, 'POINT')}" style="font-weight: 500; font-size: 0.95rem;"></span>
+                </div>
+            </div>
+
+            <!-- Totals block -->
+            <div class="d-flex justify-between mb-2">
+                <span class="text-muted">Subtotal</span>
+                <span th:text="'   ' + ${#numbers.formatDecimal(cart.getTotalAmount(), 1, 'COMMA', 0, 'POINT')}">   3,999</span>
+            </div>
+            
+            <div class="d-flex justify-between mb-3" style="border-bottom: 1px solid var(--border-glass); padding-bottom: 15px;">
+                <span class="text-muted">Delivery Charges</span>
+                <span style="color: #2ecc71; font-weight: 500;">FREE</span>
+            </div>
+
+            <div class="d-flex justify-between" style="font-size: 1.25rem; font-weight: 600; color: #fff;">
+                <span>Total Amount</span>
+                <span th:text="'   ' + ${#numbers.formatDecimal(cart.getTotalAmount(), 1, 'COMMA', 0, 'POINT')}" style="color: var(--accent-gold);">   3,999</span>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>
+

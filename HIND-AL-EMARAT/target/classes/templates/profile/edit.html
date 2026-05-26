@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header-head}"></head>
+<body>
+
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="container py-5">
+    <h1 class="section-title">My Profile</h1>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <div class="glass-card" style="max-width: 700px; margin: 0 auto;">
+        <h3 style="font-family: var(--font-serif); color: var(--accent-gold); margin-bottom: 25px; border-bottom: 1px solid var(--border-glass); padding-bottom: 10px;">Update Information</h3>
+        
+        <!-- Profile update POST endpoint -->
+        <form th:action="@{/profile/update}" method="POST">
+            <!-- Names row -->
+            <div class="grid grid-2" style="gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="firstName">First Name</label>
+                    <input type="text" name="firstName" th:value="${user.firstName}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="lastName">Last Name</label>
+                    <input type="text" name="lastName" th:value="${user.lastName}" class="form-control" required>
+                </div>
+            </div>
+
+            <!-- Email & Phone row -->
+            <div class="grid grid-2" style="gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label">Email Address (Read-only)</label>
+                    <input type="email" th:value="${user.email}" class="form-control" disabled style="background: rgba(255,255,255,0.01); color: var(--text-muted); cursor: not-allowed;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone Number</label>
+                    <input type="tel" name="phone" th:value="${user.phone}" class="form-control">
+                </div>
+            </div>
+
+            <!-- Shipping Information -->
+            <h3 style="font-family: var(--font-serif); color: var(--accent-gold); margin-top: 30px; margin-bottom: 20px; border-bottom: 1px solid var(--border-glass); padding-bottom: 10px;">Default Shipping Address</h3>
+
+            <div class="form-group">
+                <label class="form-label" for="address">Delivery Address</label>
+                <textarea name="address" th:text="${address}" class="form-control" placeholder="Street Address, Appt number..."></textarea>
+            </div>
+
+            <div class="grid grid-3" style="gap: 15px;">
+                <div class="form-group">
+                    <label class="form-label" for="city">City</label>
+                    <input type="text" name="city" th:value="${city}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="state">State</label>
+                    <input type="text" name="state" th:value="${state}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="pincode">Pincode</label>
+                    <input type="text" name="pincode" th:value="${pincode}" class="form-control">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100" style="padding: 14px; margin-top: 10px;">Save Profile Changes</button>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>

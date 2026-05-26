@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header-head}"></head>
+<body>
+
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="container py-5">
+    <h1 class="section-title">Get In Touch</h1>
+
+    <!-- Success Alert -->
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <div class="grid grid-2" style="gap: 50px; align-items: start;">
+        <!-- Left: Contact Form -->
+        <div class="glass-card">
+            <h3 style="font-family: var(--font-serif); color: var(--accent-gold); margin-bottom: 25px; border-bottom: 1px solid var(--border-glass); padding-bottom: 10px;">Send Us A Message</h3>
+            
+            <form th:action="@{/contact}" th:object="${message}" method="POST">
+                <div class="form-group">
+                    <label class="form-label" for="name">Your Name</label>
+                    <input type="text" th:field="*{name}" class="form-control" placeholder="Vikram Singh" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input type="email" th:field="*{email}" class="form-control" placeholder="vikram@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="subject">Subject</label>
+                    <input type="text" th:field="*{subject}" class="form-control" placeholder="E.g. Custom order inquiry" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="message">Message</label>
+                    <textarea th:field="*{message}" class="form-control" placeholder="Write your message here..." required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100" style="padding: 14px;">Send Message</button>
+            </form>
+        </div>
+
+        <!-- Right: Contact Information Map details -->
+        <div>
+            <div class="glass-card mb-3">
+                <h4 style="font-family: var(--font-serif); color: var(--accent-gold); margin-bottom: 15px; font-size: 1.25rem;">Our Flagship Salon</h4>
+                <p class="text-secondary" style="font-size: 0.95rem; line-height: 1.8;">
+                    <i class="fa-solid fa-location-dot" style="color: var(--accent-gold); margin-right: 10px;"></i>
+                    Luxury Perfume HQ, Sea Face Boulevard, Marine Drive, Mumbai, Maharashtra 400001
+                </p>
+            </div>
+
+            <div class="glass-card mb-3">
+                <h4 style="font-family: var(--font-serif); color: var(--accent-gold); margin-bottom: 15px; font-size: 1.25rem;">Customer Care</h4>
+                <p class="text-secondary" style="font-size: 0.95rem; line-height: 1.8; margin-bottom: 10px;">
+                    <i class="fa-solid fa-phone" style="color: var(--accent-gold); margin-right: 10px;"></i>
+                    +91 22 9876 5432
+                </p>
+                <p class="text-secondary" style="font-size: 0.95rem; line-height: 1.8;">
+                    <i class="fa-solid fa-envelope" style="color: var(--accent-gold); margin-right: 10px;"></i>
+                    support@hindalemarat.com
+                </p>
+            </div>
+
+            <div class="glass-card">
+                <h4 style="font-family: var(--font-serif); color: var(--accent-gold); margin-bottom: 15px; font-size: 1.25rem;">Bespoke Consultations</h4>
+                <p class="text-muted" style="font-size: 0.85rem; line-height: 1.7;">For wholesale distribution details, customized luxury wedding gifts, or bespoke high-concentration personal blend requests, please write directly to our chief perfumer at <strong>perfumer@hindalemarat.com</strong>.</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>

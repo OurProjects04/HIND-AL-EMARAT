@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<footer th:fragment="footer" class="footer-wrap">
+    <div class="container grid footer-grid">
+        <!-- Brand Info -->
+        <div>
+            <a th:href="@{/}" class="brand-logo" style="display: inline-block; margin-bottom: 10px;">HIND AL EMARAT</a>
+            <p class="footer-desc">Crafting high-end, long-lasting luxury fragrances combining deep Indian traditions with premium Arabian Oud &amp; Attar formulations.</p>
+        </div>
+
+        <!-- Quick Links -->
+        <div>
+            <h4 class="footer-section-title">Quick Links</h4>
+            <ul class="footer-links">
+                <li><a th:href="@{/}">Home</a></li>
+                <li><a th:href="@{/products}">Explore Products</a></li>
+                <li><a th:href="@{/about}">Our Heritage</a></li>
+                <li><a th:href="@{/contact}">Get in Touch</a></li>
+            </ul>
+        </div>
+
+        <!-- Collections -->
+        <div>
+            <h4 class="footer-section-title">Collections</h4>
+            <ul class="footer-links">
+                <li><a th:href="@{/products(categoryId=1)}">Oud Collection</a></li>
+                <li><a th:href="@{/products(categoryId=2)}">Natural Attars</a></li>
+                <li><a th:href="@{/products(categoryId=3)}">Signature Musk</a></li>
+                <li><a th:href="@{/products(categoryId=4)}">Floral Nectars</a></li>
+            </ul>
+        </div>
+
+        <!-- Contact & Location -->
+        <div>
+            <h4 class="footer-section-title">Address &amp; Contact</h4>
+            <p class="footer-desc" style="font-size: 0.9rem; margin-top: 0; margin-bottom: 10px;">
+                <i class="fa-solid fa-location-dot" style="color: var(--accent-gold); margin-right: 8px;"></i>
+                Luxury Perfume HQ, Marine Drive, Mumbai, 400001
+            </p>
+            <p class="footer-desc" style="font-size: 0.9rem; margin-top: 0; margin-bottom: 10px;">
+                <i class="fa-solid fa-phone" style="color: var(--accent-gold); margin-right: 8px;"></i>
+                +91 22 9876 5432
+            </p>
+            <p class="footer-desc" style="font-size: 0.9rem; margin-top: 0;">
+                <i class="fa-solid fa-envelope" style="color: var(--accent-gold); margin-right: 8px;"></i>
+                contact@hindalemarat.com
+            </p>
+        </div>
+    </div>
+
+    <!-- Bottom Copyright -->
+    <div class="container footer-bottom">
+        <p>&copy; <span th:text="${#calendars.year(#calendars.createNow())}">2026</span> HIND AL EMARAT. All Rights Reserved. Crafted with passion.</p>
+    </div>
+
+    <!-- Scripts -->
+    <script th:src="@{/js/main.js}"></script>
+    <script th:src="@{/js/cart.js}"></script>
+</footer>
+
+</body>
+</html>

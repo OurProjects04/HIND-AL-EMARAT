@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header-head}"></head>
+<body>
+
+<header th:replace="~{fragments/header :: header}"></header>
+
+<!-- Admin navigation subbar -->
+<div style="background: var(--bg-secondary); border-bottom: 1px solid var(--border-glass); padding: 15px 0;">
+    <div class="container d-flex flex-wrap gap-2">
+        <a th:href="@{/admin/dashboard}" class="btn btn-sm btn-secondary">Dashboard</a>
+        <a th:href="@{/admin/products}" class="btn btn-sm btn-secondary">Products</a>
+        <a th:href="@{/admin/categories}" class="btn btn-sm btn-secondary">Categories</a>
+        <a th:href="@{/admin/orders}" class="btn btn-sm btn-primary">Orders</a>
+        <a th:href="@{/admin/users}" class="btn btn-sm btn-secondary">Customers</a>
+        <a th:href="@{/admin/messages}" class="btn btn-sm btn-secondary">Messages</a>
+    </div>
+</div>
+
+<main class="container py-5">
+    <!-- Header -->
+    <div class="admin-dashboard-header">
+        <div>
+            <span class="admin-breadcrumbs"><a th:href="@{/admin/dashboard}">Dashboard</a> / Orders</span>
+            <h1 style="font-family: var(--font-serif); font-size: 2.2rem;">Customer Orders</h1>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <!-- Orders Table Card -->
+    <div class="admin-card">
+        <div th:if="${#lists.isEmpty(orders)}" style="text-align: center; padding: 40px 0;">
+            <p class="text-muted">No orders placed yet.</p>
+        </div>
+
+        <div class="table-responsive" th:unless="${#lists.isEmpty(orders)}">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer / Contact</th>
+                        <th>Address</th>
+                        <th>Total Amount</th>
+                        <th>Payment Method</th>
+                        <th>Payment Status</th>
+                        <th>Order Status</th>
+                        <th style="text-align: right;">Update Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="o : ${orders}">
+                        <!-- Order # & Date -->
+                        <td>
+                            <strong th:text="${o.orderNumber}" style="color: var(--accent-gold); font-family: var(--font-sans);">HAE-12345</strong>
+                            <p class="text-muted" th:text="${#temporals.format(o.createdAt, 'dd MMM yyyy HH:mm')}" style="font-size: 0.75rem; margin: 0;"></p>
+                        </td>
+                        <!-- Customer -->
+                        <td>
+                            <strong th:text="${o.fullName}" style="color: #fff;">Vikram Singh</strong>
+                            <p class="text-muted" style="font-size: 0.75rem; margin: 0;" th:text="${o.email}"></p>
+                            <p class="text-muted" style="font-size: 0.75rem; margin: 0;" th:text="${o.phone}"></p>
+                        </td>
+                        <!-- Address -->
+                        <td>
+                            <p th:text="${o.address}" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0; font-size: 0.85rem;"></p>
+                            <p th:text="${o.city} + ', ' + ${o.state} + ' - ' + ${o.pincode}" style="margin: 0; font-size: 0.8rem;" class="text-muted"></p>
+                        </td>
+                        <!-- Amount -->
+                        <td th:text="'₹' + ${#numbers.formatDecimal(o.totalAmount, 1, 'COMMA', 0, 'POINT')}" style="font-weight: 600;">₹3,999</td>
+                        <!-- Payment Method -->
+                        <td th:text="${o.paymentMethod}">COD</td>
+                        <!-- Payment Status -->
+                        <td>
+                            <span class="badge" th:classappend="${o.paymentStatus == 'PAID'} ? 'badge-delivered' : 'badge-pending'" th:text="${o.paymentStatus}">PENDING</span>
+                        </td>
+                        <!-- Order Status -->
+                        <td>
+                            <span class="badge" th:classappend="'badge-' + ${#strings.toLowerCase(o.orderStatus)}" th:text="${o.orderStatus}">PENDING</span>
+                        </td>
+                        <!-- Action Dropdown Form -->
+                        <td style="text-align: right;">
+                            <form th:action="@{/admin/orders/update-status}" method="POST" class="status-select-form" style="justify-content: flex-end;">
+                                <input type="hidden" name="orderId" th:value="${o.id}">
+                                <select name="status" class="status-select" onchange="this.form.submit()">
+                                    <option value="PENDING" th:selected="${o.orderStatus == 'PENDING'}">PENDING</option>
+                                    <option value="CONFIRMED" th:selected="${o.orderStatus == 'CONFIRMED'}">CONFIRMED</option>
+                                    <option value="SHIPPED" th:selected="${o.orderStatus == 'SHIPPED'}">SHIPPED</option>
+                                    <option value="DELIVERED" th:selected="${o.orderStatus == 'DELIVERED'}">DELIVERED</option>
+                                    <option value="CANCELLED" th:selected="${o.orderStatus == 'CANCELLED'}">CANCELLED</option>
+                                </select>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>
