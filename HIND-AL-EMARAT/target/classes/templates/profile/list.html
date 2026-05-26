@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header-head}"></head>
+<body>
+
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="container py-5">
+    <!-- Breadcrumbs / Page Header -->
+    <div style="margin-bottom: 40px; text-align: center;">
+        <h1 class="section-title" th:text="${searchQuery != null} ? 'Search Results: ' + ${searchQuery} : 'Our Collection'">Our Perfumes</h1>
+    </div>
+
+    <!-- Filters and Search Bar -->
+    <div class="glass-card" style="margin-bottom: 40px; padding: 20px;">
+        <div class="d-flex justify-between align-center flex-wrap gap-2" style="width: 100%;">
+            <!-- Category Filter Pills -->
+            <div class="d-flex flex-wrap gap-1" style="align-items: center;">
+                <a th:href="@{/products}" class="btn btn-sm" th:classappend="${selectedCategory == null} ? 'btn-primary' : 'btn-secondary'">All</a>
+                
+                <a th:each="cat : ${categories}" 
+                   th:href="@{/products(categoryId=${cat.id})}" 
+                   class="btn btn-sm" 
+                   th:classappend="${selectedCategory == cat.id} ? 'btn-primary' : 'btn-secondary'"
+                   th:text="${cat.name}">Oud</a>
+            </div>
+
+            <!-- Search Form -->
+            <form th:action="@{/products}" method="GET" style="display: flex; gap: 10px; max-width: 350px; width: 100%;">
+                <input type="text" name="search" th:value="${searchQuery}" class="form-control" placeholder="Search perfume..." style="padding: 8px 16px;">
+                <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- No Products Found -->
+    <div th:if="${#lists.isEmpty(products)}" style="text-align: center; padding: 60px 0;">
+        <i class="fa-solid fa-ghost" style="font-size: 3.5rem; color: var(--text-muted); margin-bottom: 20px;"></i>
+        <h2 style="font-family: var(--font-serif); margin-bottom: 10px;">No Perfumes Found</h2>
+        <p class="text-muted" style="margin-bottom: 30px;">We couldn't find any products matching your selection.</p>
+        <a th:href="@{/products}" class="btn btn-primary">Reset Filters</a>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="grid grid-4" th:unless="${#lists.isEmpty(products)}">
+        <div class="glass-card product-card" th:each="product : ${products}">
+            <div class="product-image-container">
+                <img th:src="${@fileUploadUtil.resolvePublicUrl(product.imageUrl)}" th:alt="${product.name}" class="product-img">
+            </div>
+            <div class="product-info-wrap">
+                <div>
+                    <span class="product-cat" th:text="${product.category != null ? product.category.name : 'Perfume'}">Attar</span>
+                    <h3 class="product-name" th:text="${product.name}">Royal Oud Majesty</h3>
+                    <p class="text-muted" th:text="${product.size}" style="font-size: 0.8rem; margin-top: -5px; margin-bottom: 10px;">50ml</p>
+                </div>
+                <div>
+                    <div class="price-container">
+                        <span class="original-price" th:if="${product.discountPrice > 0}" th:text="'â‚¹' + ${#numbers.formatDecimal(product.price, 1, 'COMMA', 0, 'POINT')}">â‚¹4,999</span>
+                        <span class="current-price" th:text="'â‚¹' + ${#numbers.formatDecimal(product.discountPrice > 0 ? product.discountPrice : product.price, 1, 'COMMA', 0, 'POINT')}">â‚¹3,999</span>
+                    </div>
+                    <div class="product-footer">
+                        <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-secondary btn-sm w-100">View Details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>
+

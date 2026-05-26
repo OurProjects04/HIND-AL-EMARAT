@@ -1,0 +1,108 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header-head}"></head>
+<body>
+
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="container py-5">
+    <h1 class="section-title">Your Cart</h1>
+
+    <!-- Success/Error alert box -->
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <!-- Empty Cart Template -->
+    <div th:if="${cart == null or #lists.isEmpty(cart.cartItems)}" style="text-align: center; padding: 60px 0;" class="glass-card animate-fadeInUp">
+        <i class="fa-solid fa-bag-shopping" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 20px;"></i>
+        <h2 style="font-family: var(--font-serif); margin-bottom: 10px;">Your shopping bag is empty</h2>
+        <p class="text-muted" style="margin-bottom: 30px;">Add items to your cart to begin your luxury fragrance journey.</p>
+        <a th:href="@{/products}" class="btn btn-primary">Go to Perfumes</a>
+    </div>
+
+    <!-- Active Cart Items Grid/List -->
+    <div class="grid" th:unless="${cart == null or #lists.isEmpty(cart.cartItems)}" style="grid-template-columns: 2fr 1fr; align-items: start;">
+        <!-- Left Pane: Items List -->
+        <div class="glass-card" style="padding: 20px;">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th colspan="2">Product</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Subtotal</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${cart.cartItems}">
+                            <!-- Image -->
+                            <td style="width: 80px;">
+                                <img th:src="${@fileUploadUtil.resolvePublicUrl(item.product.imageUrl)}" th:alt="${item.product.name}" style="width: 70px; height: 80px; object-fit: cover; border-radius: 4px;">
+                            </td>
+                            <!-- Details -->
+                            <td>
+                                <a th:href="@{/products/{id}(id=${item.product.id})}" style="font-weight: 500; font-family: var(--font-serif); font-size: 1.1rem; color: #fff; hover: var(--accent-gold);" th:text="${item.product.name}">Royal Oud Majesty</a>
+                                <p class="text-muted" th:text="${item.product.size}" style="font-size: 0.8rem;">50ml</p>
+                                <th:block th:if="${item.product.isDemoProduct()}">
+                                    <span class="badge" style="background-color: #7c3aed; color: #fff; font-size: 0.65rem; margin-top: 4px; display: inline-block;">Demo Pack</span>
+                                </th:block>
+                            </td>
+                            <!-- Price -->
+                            <td th:text="'    ' + ${#numbers.formatDecimal(item.product.discountPrice > 0 ? item.product.discountPrice : item.product.price, 1, 'COMMA', 0, 'POINT')}">    3,999</td>
+                            <!-- Quantity selector -->
+                            <td>
+                                <div class="quantity-input-group" style="scale: 0.9;">
+                                    <!-- Decrement button submits updated quantity via helper function -->
+                                    <button type="button" class="quantity-btn" th:onclick="'submitQtyUpdate(' + ${item.id} + ', ' + (${item.quantity} - 1) + ')'">-</button>
+                                    <input type="text" class="quantity-val" th:value="${item.quantity}" readonly>
+                                    <!-- Increment button submits quantity+1 -->
+                                    <button type="button" class="quantity-btn" th:onclick="'submitQtyUpdate(' + ${item.id} + ', ' + (${item.quantity} + 1) + ')'">+</button>
+                                </div>
+                            </td>
+                            <!-- Subtotal -->
+                            <td th:text="'    ' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 'COMMA', 0, 'POINT')}" style="color: var(--accent-gold); font-weight: 600;">    3,999</td>
+                            <!-- Remove button -->
+                            <td>
+                                <form th:action="@{/cart/remove}" method="POST" onsubmit="return confirmDelete('Remove this item from your cart?');">
+                                    <input type="hidden" name="cartItemId" th:value="${item.id}">
+                                    <button type="submit" style="background: transparent; color: #e74c3c; border: none; cursor: pointer; font-size: 1rem;"><i class="fa-solid fa-trash-can"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Right Pane: Order Summary Card -->
+        <div class="glass-card">
+            <h3 style="font-family: var(--font-serif); margin-bottom: 20px; border-bottom: 1px solid var(--border-glass); padding-bottom: 10px; color: var(--accent-gold);">Summary</h3>
+            
+            <div class="d-flex justify-between mb-2">
+                <span class="text-muted">Subtotal</span>
+                <span th:text="'    ' + ${#numbers.formatDecimal(cart.getTotalAmount(), 1, 'COMMA', 0, 'POINT')}">    3,999</span>
+            </div>
+            
+            <div class="d-flex justify-between mb-3" style="border-bottom: 1px solid var(--border-glass); padding-bottom: 15px;">
+                <span class="text-muted">Delivery Charges</span>
+                <span style="color: #2ecc71; font-weight: 500;">FREE</span>
+            </div>
+
+            <div class="d-flex justify-between mb-3" style="font-size: 1.25rem; font-weight: 600;">
+                <span>Total Amount</span>
+                <span th:text="'    ' + ${#numbers.formatDecimal(cart.getTotalAmount(), 1, 'COMMA', 0, 'POINT')}" style="color: var(--accent-gold);">    3,999</span>
+            </div>
+
+            <a th:href="@{/checkout}" class="btn btn-primary w-100 mb-2">Proceed To Checkout</a>
+            <a th:href="@{/products}" class="btn btn-secondary w-100">Continue Shopping</a>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>
+

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header-head}"></head>
+<body>
+
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="container py-5">
+    <h1 class="section-title">My Orders</h1>
+
+    <!-- Empty state -->
+    <div th:if="${#lists.isEmpty(orders)}" style="text-align: center; padding: 60px 0;" class="glass-card animate-fadeInUp">
+        <i class="fa-solid fa-receipt" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 20px;"></i>
+        <h2 style="font-family: var(--font-serif); margin-bottom: 10px;">No Orders Found</h2>
+        <p class="text-muted" style="margin-bottom: 30px;">You haven't placed any orders with Hind Al Emarat yet.</p>
+        <a th:href="@{/products}" class="btn btn-primary">Start Shopping</a>
+    </div>
+
+    <!-- Orders list accordion style -->
+    <div th:unless="${#lists.isEmpty(orders)}" style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="glass-card" th:each="order : ${orders}" style="padding: 24px;">
+            <!-- Header Row -->
+            <div class="d-flex justify-between align-center flex-wrap gap-2" style="border-bottom: 1px solid var(--border-glass); padding-bottom: 15px; margin-bottom: 15px;">
+                <div>
+                    <span class="text-muted" style="font-size: 0.8rem; text-transform: uppercase;">Order Number</span>
+                    <h3 th:text="${order.orderNumber}" style="font-family: var(--font-sans); font-size: 1.15rem; color: var(--accent-gold); font-weight: 600; letter-spacing: 1px;">HAE-12345</h3>
+                </div>
+                <div>
+                    <span class="text-muted" style="font-size: 0.8rem; text-transform: uppercase;">Placed On</span>
+                    <p th:text="${#temporals.format(order.createdAt, 'dd MMMM yyyy HH:mm')}" style="font-size: 0.95rem; font-weight: 500;"></p>
+                </div>
+                <div>
+                    <span class="text-muted" style="font-size: 0.8rem; text-transform: uppercase;">Total</span>
+                    <p th:text="'₹' + ${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 0, 'POINT')}" style="font-size: 1.1rem; font-weight: 600; color: #fff;"></p>
+                </div>
+                <div>
+                    <span class="text-muted" style="font-size: 0.8rem; text-transform: uppercase; display: block; margin-bottom: 4px;">Status</span>
+                    <span class="badge" th:classappend="'badge-' + ${#strings.toLowerCase(order.orderStatus)}" th:text="${order.orderStatus}">PENDING</span>
+                </div>
+            </div>
+
+            <!-- Items and Shipping details Split -->
+            <div class="grid grid-2" style="gap: 30px; align-items: start;">
+                <!-- Products -->
+                <div>
+                    <h4 style="font-family: var(--font-sans); text-transform: uppercase; font-size: 0.8rem; color: var(--accent-gold); letter-spacing: 1.5px; margin-bottom: 15px;">Items</h4>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div th:each="item : ${order.orderItems}" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 8px;">
+                            <div>
+                                <span th:text="${item.product.name}" style="font-family: var(--font-serif); font-size: 1rem; font-weight: 500;">Royal Oud Majesty</span>
+                                <span th:text="'(x' + ${item.quantity} + ')'" class="text-muted" style="font-size: 0.85rem; margin-left: 5px;"></span>
+                            </div>
+                            <span th:text="'₹' + ${#numbers.formatDecimal(item.price * item.quantity, 1, 'COMMA', 0, 'POINT')}" style="font-size: 0.95rem; font-weight: 500;"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping Address -->
+                <div style="background: rgba(255,255,255,0.01); border: 1px solid var(--border-glass); border-radius: 4px; padding: 15px; font-size: 0.9rem;">
+                    <h4 style="font-family: var(--font-sans); text-transform: uppercase; font-size: 0.8rem; color: var(--accent-gold); letter-spacing: 1.5px; margin-bottom: 10px;">Shipping Details</h4>
+                    <p style="font-weight: 600; margin-bottom: 5px;" th:text="${order.fullName}">Vikram Singh</p>
+                    <p th:text="${order.address}" style="color: var(--text-secondary); margin-bottom: 5px;"></p>
+                    <p th:text="${order.city} + ', ' + ${order.state} + ' - ' + ${order.pincode}" style="color: var(--text-secondary); margin-bottom: 10px;"></p>
+                    <p style="font-size: 0.85rem;"><span class="text-muted">Payment:</span> <strong th:text="${order.paymentMethod}">COD</strong> (<span th:text="${order.paymentStatus}" style="font-style: italic;">PENDING</span>)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>

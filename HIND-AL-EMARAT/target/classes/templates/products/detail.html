@@ -1,0 +1,263 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header-head}"></head>
+<body>
+
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="container py-5">
+    <!-- Success/Error alert box -->
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <div class="grid product-detail-grid">
+        <!-- Product Image -->
+        <div class="detail-img-container">
+            <img th:src="${@fileUploadUtil.resolvePublicUrl(product.imageUrl)}" th:alt="${product.name}" style="width: 100%; height: auto; object-fit: cover;">
+        </div>
+
+        <!-- Product Info -->
+        <div class="detail-info">
+            <span class="product-cat" th:text="${product.category != null ? product.category.name : 'Luxury Collection'}">Oud</span>
+            <h1 class="detail-title" th:text="${product.name}">Royal Oud Majesty</h1>
+            
+            <div class="price-container mb-3" style="font-size: 1.6rem;">
+                <span class="original-price" th:if="${product.discountPrice > 0}" th:text="' ' + ${#numbers.formatDecimal(product.price, 1, 'COMMA', 0, 'POINT')}"> 4,999</span>
+                <span class="current-price" th:text="' ' + ${#numbers.formatDecimal(product.discountPrice > 0 ? product.discountPrice : product.price, 1, 'COMMA', 0, 'POINT')}"> 3,999</span>
+            </div>
+
+            <p class="text-muted" th:text="'Size: ' + ${product.size}" style="font-weight: 500; font-size: 1.1rem; margin-bottom: 20px;">Size: 50ml</p>
+
+            <!-- Fragrance Notes Block -->
+            <div class="detail-notes">
+                <h4 style="font-family: var(--font-sans); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1.5px; color: var(--accent-gold); margin-bottom: 5px;">Fragrance Notes</h4>
+                <p style="font-style: italic; font-size: 0.95rem;" th:text="${product.fragranceNotes}">Top: Bergamot; Heart: Rose; Base: Indian Oud</p>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-3">
+                <h4 style="font-family: var(--font-sans); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1.5px; color: var(--accent-gold); margin-bottom: 5px;">Description</h4>
+                <p th:text="${product.description}" style="color: var(--text-secondary); font-size: 0.95rem;">Opulent luxury formulation...</p>
+            </div>
+
+            <!-- Stock Status & Add to Cart -->
+            <div class="mb-3">
+                <span class="stock-status stock-in" th:if="${product.stockQuantity > 0}"><i class="fa-regular fa-circle-check"></i> In Stock (Only <span th:text="${product.stockQuantity}">10</span> left)</span>
+                <span class="stock-status stock-out" th:unless="${product.stockQuantity > 0}"><i class="fa-regular fa-circle-xmark"></i> Out of Stock</span>
+            </div>
+
+            <!-- Add to Cart Form -->
+            <div th:if="${product.stockQuantity > 0}">
+                <!-- Show forms depending on authentication -->
+                <div sec:authorize="isAuthenticated()">
+                    <form th:action="@{/cart/add}" method="POST" class="d-flex align-center gap-2">
+                        <input type="hidden" name="productId" th:value="${product.id}">
+                        
+                        <div class="quantity-input-group">
+                            <button type="button" class="quantity-btn qty-minus">-</button>
+                            <input type="number" id="qty-display" class="quantity-val" value="1" min="1" th:max="${product.stockQuantity}" readonly>
+                            <button type="button" class="quantity-btn qty-plus">+</button>
+                        </div>
+                        
+                        <!-- Hidden input for form submit -->
+                        <input type="hidden" name="quantity" id="hidden-qty-input" value="1">
+                        
+                        <button type="submit" class="btn btn-primary" style="flex-grow: 1; padding: 14px 20px;">
+                            <i class="fa-solid fa-cart-plus" style="margin-right: 8px;"></i> Add To Cart
+                        </button>
+                    </form>
+                </div>
+                
+                <div sec:authorize="!isAuthenticated()" style="margin-top: 10px;">
+                    <a th:href="@{/login}" class="btn btn-primary w-100" style="padding: 14px 20px;">
+                        <i class="fa-solid fa-right-to-bracket" style="margin-right: 8px;"></i> Login to Purchase
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== DEMO/MINI PACK SECTION ==================== -->
+    <div th:if="${demoProduct != null}" style="margin-top: 60px; padding-top: 40px; border-top: 2px solid var(--border-glass);">
+        <h2 style="font-family: var(--font-serif); font-size: 1.8rem; margin-bottom: 30px; color: var(--accent-gold);">
+            <i class="fa-solid fa-vial" style="margin-right: 10px;"></i> Try Our Demo Pack
+        </h2>
+        
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+            <!-- Full Bottle Option -->
+            <div class="glass-card" style="padding: 25px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h3 style="font-family: var(--font-serif); margin-bottom: 15px; font-size: 1.3rem;">Full Bottle</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 15px;">Experience the complete luxury fragrance in its full concentration.</p>
+                    
+                    <div style="background: var(--bg-secondary); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Size:</strong> <span th:text="${product.quantityMl} + 'ml'">100ml</span></p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Price:</strong> <span class="price-container" style="display: inline;">
+                            <span class="original-price" th:if="${product.discountPrice > 0}" th:text="' ' + ${#numbers.formatDecimal(product.price, 1, 'COMMA', 0, 'POINT')}"> 4,999</span>
+                            <strong th:text="' ' + ${#numbers.formatDecimal(product.discountPrice > 0 ? product.discountPrice : product.price, 1, 'COMMA', 0, 'POINT')}"> 3,999</strong>
+                        </span></p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Stock:</strong> <span th:text="${product.stockQuantity} + ' units'">25 units</span></p>
+                    </div>
+                </div>
+                
+                <div sec:authorize="isAuthenticated()">
+                    <form th:action="@{/cart/add}" method="POST" class="d-flex align-center gap-2">
+                        <input type="hidden" name="productId" th:value="${product.id}">
+                        <div class="quantity-input-group">
+                            <button type="button" class="quantity-btn qty-minus-full">-</button>
+                            <input type="number" class="quantity-val qty-display-full" value="1" min="1" th:max="${product.stockQuantity}" readonly>
+                            <button type="button" class="quantity-btn qty-plus-full">+</button>
+                        </div>
+                        <input type="hidden" name="quantity" class="hidden-qty-full" value="1">
+                        <button type="submit" class="btn btn-primary w-100">Add Full Bottle</button>
+                    </form>
+                </div>
+                
+                <div sec:authorize="!isAuthenticated()" style="margin-top: 10px;">
+                    <a th:href="@{/login}" class="btn btn-primary w-100">Login to Purchase</a>
+                </div>
+            </div>
+
+            <!-- Demo Pack Option -->
+            <div class="glass-card" style="padding: 25px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid var(--accent-gold);">
+                <div>
+                    <h3 style="font-family: var(--font-serif); margin-bottom: 15px; font-size: 1.3rem;">
+                        <span style="color: var(--accent-gold);">âœ¨</span> Demo Pack
+                    </h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 15px;">Try this exquisite fragrance with our generous trial size. Perfect for testing and travel.</p>
+                    
+                    <div style="background: var(--bg-secondary); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Size:</strong> <span th:text="${demoProduct.quantityMl} + 'ml Demo'">10ml Demo</span></p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Price:</strong> <strong style="color: var(--accent-gold);" th:text="' ' + ${#numbers.formatDecimal(demoProduct.price, 1, 'COMMA', 0, 'POINT')}"> 200</strong></p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Stock:</strong> <span th:text="${demoProduct.stockQuantity} + ' units'">50 units</span></p>
+                    </div>
+                </div>
+                
+                <div sec:authorize="isAuthenticated()">
+                    <form th:action="@{/cart/add}" method="POST" class="d-flex align-center gap-2">
+                        <input type="hidden" name="productId" th:value="${demoProduct.id}">
+                        <div class="quantity-input-group">
+                            <button type="button" class="quantity-btn qty-minus-demo">-</button>
+                            <input type="number" class="quantity-val qty-display-demo" value="1" min="1" th:max="${demoProduct.stockQuantity}" readonly>
+                            <button type="button" class="quantity-btn qty-plus-demo">+</button>
+                        </div>
+                        <input type="hidden" name="quantity" class="hidden-qty-demo" value="1">
+                        <button type="submit" class="btn btn-primary w-100">Add Demo Pack</button>
+                    </form>
+                </div>
+                
+                <div sec:authorize="!isAuthenticated()" style="margin-top: 10px;">
+                    <a th:href="@{/login}" class="btn btn-primary w-100">Login to Purchase</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    <section class="py-5 mt-4" th:unless="${#lists.isEmpty(relatedProducts)}">
+        <h2 class="section-title">You May Also Like</h2>
+        <div class="grid grid-4">
+            <div class="glass-card product-card" th:each="related : ${relatedProducts}">
+                <div class="product-image-container">
+                    <img th:src="${@fileUploadUtil.resolvePublicUrl(related.imageUrl)}" th:alt="${related.name}" class="product-img">
+                </div>
+                <div class="product-info-wrap">
+                    <div>
+                        <span class="product-cat" th:text="${related.category != null ? related.category.name : 'Signature'}">Musk</span>
+                        <h3 class="product-name" th:text="${related.name}">Royal Oud Majesty</h3>
+                        <p class="text-muted" th:text="${related.size}" style="font-size: 0.8rem; margin-top: -5px;">50ml</p>
+                    </div>
+                    <div>
+                        <div class="price-container">
+                            <span class="original-price" th:if="${related.discountPrice > 0}" th:text="' ' + ${#numbers.formatDecimal(related.price, 1, 'COMMA', 0, 'POINT')}"> 4,999</span>
+                            <span class="current-price" th:text="' ' + ${#numbers.formatDecimal(related.discountPrice > 0 ? related.discountPrice : related.price, 1, 'COMMA', 0, 'POINT')}"> 3,999</span>
+                        </div>
+                        <div class="product-footer">
+                            <a th:href="@{/products/{id}(id=${related.id})}" class="btn btn-secondary btn-sm w-100">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+<script>
+// Quantity control for Full Bottle
+document.querySelectorAll('.qty-plus').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const input = this.previousElementSibling;
+        const hiddenInput = this.closest('form').querySelector('#hidden-qty-input');
+        const max = parseInt(input.max);
+        if (parseInt(input.value) < max) {
+            input.value = parseInt(input.value) + 1;
+            hiddenInput.value = input.value;
+        }
+    });
+});
+
+document.querySelectorAll('.qty-minus').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const input = this.nextElementSibling;
+        const hiddenInput = this.closest('form').querySelector('#hidden-qty-input');
+        if (parseInt(input.value) > 1) {
+            input.value = parseInt(input.value) - 1;
+            hiddenInput.value = input.value;
+        }
+    });
+});
+
+// Quantity control for Full Bottle (demo section)
+document.querySelectorAll('.qty-plus-full').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const input = this.previousElementSibling;
+        const hiddenInput = this.closest('form').querySelector('.hidden-qty-full');
+        const max = parseInt(input.max);
+        if (parseInt(input.value) < max) {
+            input.value = parseInt(input.value) + 1;
+            hiddenInput.value = input.value;
+        }
+    });
+});
+
+document.querySelectorAll('.qty-minus-full').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const input = this.nextElementSibling;
+        const hiddenInput = this.closest('form').querySelector('.hidden-qty-full');
+        if (parseInt(input.value) > 1) {
+            input.value = parseInt(input.value) - 1;
+            hiddenInput.value = input.value;
+        }
+    });
+});
+
+// Quantity control for Demo Pack
+document.querySelectorAll('.qty-plus-demo').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const input = this.previousElementSibling;
+        const hiddenInput = this.closest('form').querySelector('.hidden-qty-demo');
+        const max = parseInt(input.max);
+        if (parseInt(input.value) < max) {
+            input.value = parseInt(input.value) + 1;
+            hiddenInput.value = input.value;
+        }
+    });
+});
+
+document.querySelectorAll('.qty-minus-demo').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const input = this.nextElementSibling;
+        const hiddenInput = this.closest('form').querySelector('.hidden-qty-demo');
+        if (parseInt(input.value) > 1) {
+            input.value = parseInt(input.value) - 1;
+            hiddenInput.value = input.value;
+        }
+    });
+});
+</script>
+
+</body>
+</html>
+

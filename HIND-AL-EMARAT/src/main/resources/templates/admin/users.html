@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header-head}"></head>
+<body>
+
+<header th:replace="~{fragments/header :: header}"></header>
+
+<!-- Admin navigation subbar -->
+<div style="background: var(--bg-secondary); border-bottom: 1px solid var(--border-glass); padding: 15px 0;">
+    <div class="container d-flex flex-wrap gap-2">
+        <a th:href="@{/admin/dashboard}" class="btn btn-sm btn-secondary">Dashboard</a>
+        <a th:href="@{/admin/products}" class="btn btn-sm btn-secondary">Products</a>
+        <a th:href="@{/admin/categories}" class="btn btn-sm btn-secondary">Categories</a>
+        <a th:href="@{/admin/orders}" class="btn btn-sm btn-secondary">Orders</a>
+        <a th:href="@{/admin/users}" class="btn btn-sm btn-primary">Customers</a>
+        <a th:href="@{/admin/messages}" class="btn btn-sm btn-secondary">Messages</a>
+    </div>
+</div>
+
+<main class="container py-5">
+    <!-- Header -->
+    <div class="admin-dashboard-header">
+        <div>
+            <span class="admin-breadcrumbs"><a th:href="@{/admin/dashboard}">Dashboard</a> / Customers</span>
+            <h1 style="font-family: var(--font-serif); font-size: 2.2rem;">Registered Users</h1>
+        </div>
+    </div>
+
+    <!-- Users Table Card -->
+    <div class="admin-card">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Roles</th>
+                        <th>Registered Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${users}">
+                        <td th:text="${u.id}" style="color: var(--text-muted); font-size: 0.85rem;">1</td>
+                        <td>
+                            <strong th:text="${u.firstName} + ' ' + ${u.lastName}" style="color: #fff;">Vikram Singh</strong>
+                        </td>
+                        <td th:text="${u.email}">vikram@example.com</td>
+                        <td th:text="${u.phone != null and !u.phone.isEmpty()} ? ${u.phone} : 'Not Provided'">9876543210</td>
+                        <td>
+                            <!-- Roles rendering -->
+                            <div class="d-flex gap-1">
+                                <span th:each="role : ${u.roles}" 
+                                      class="badge" 
+                                      th:classappend="${role.name == 'ROLE_ADMIN'} ? 'badge-delivered' : 'badge-confirmed'"
+                                      th:text="${#strings.replace(role.name, 'ROLE_', '')}">USER</span>
+                            </div>
+                        </td>
+                        <td th:text="${#temporals.format(u.createdAt, 'dd MMM yyyy HH:mm')}">20 May 2026</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header-head}"></head>
+<body>
+
+<header th:replace="~{fragments/header :: header}"></header>
+
+<!-- Admin navigation subbar -->
+<div style="background: var(--bg-secondary); border-bottom: 1px solid var(--border-glass); padding: 15px 0;">
+    <div class="container d-flex flex-wrap gap-2">
+        <a th:href="@{/admin/dashboard}" class="btn btn-sm btn-secondary">Dashboard</a>
+        <a th:href="@{/admin/products}" class="btn btn-sm btn-secondary">Products</a>
+        <a th:href="@{/admin/categories}" class="btn btn-sm btn-secondary">Categories</a>
+        <a th:href="@{/admin/orders}" class="btn btn-sm btn-secondary">Orders</a>
+        <a th:href="@{/admin/users}" class="btn btn-sm btn-secondary">Customers</a>
+        <a th:href="@{/admin/messages}" class="btn btn-sm btn-primary">Messages</a>
+    </div>
+</div>
+
+<main class="container py-5">
+    <!-- Header -->
+    <div class="admin-dashboard-header">
+        <div>
+            <span class="admin-breadcrumbs"><a th:href="@{/admin/dashboard}">Dashboard</a> / Messages</span>
+            <h1 style="font-family: var(--font-serif); font-size: 2.2rem;">Customer Inquiries</h1>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <!-- Messages List Card -->
+    <div class="admin-card">
+        <div th:if="${#lists.isEmpty(messages)}" style="text-align: center; padding: 40px 0;">
+            <i class="fa-regular fa-envelope" style="font-size: 3.5rem; color: var(--text-muted); margin-bottom: 20px;"></i>
+            <h3 style="font-family: var(--font-serif); margin-bottom: 10px;">Inbox is empty</h3>
+            <p class="text-muted">You haven't received any customer messages yet.</p>
+        </div>
+
+        <div class="table-responsive" th:unless="${#lists.isEmpty(messages)}">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Sender</th>
+                        <th>Subject</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="msg : ${messages}" th:style="${!msg.read} ? 'background: rgba(201, 168, 76, 0.02);' : ''">
+                        <!-- Date -->
+                        <td th:text="${#temporals.format(msg.createdAt, 'dd MMM yyyy HH:mm')}" style="font-size: 0.85rem; color: var(--text-muted);">20 May 2026</td>
+                        <!-- Sender -->
+                        <td>
+                            <strong th:text="${msg.name}" style="color: #fff;">Vikram Singh</strong>
+                            <p class="text-muted" th:text="${msg.email}" style="font-size: 0.75rem; margin: 0;"></p>
+                        </td>
+                        <!-- Subject -->
+                        <td><strong th:text="${msg.subject}" th:style="${!msg.read} ? 'color: var(--accent-gold);' : ''">Bulk Order</strong></td>
+                        <!-- Message Content -->
+                        <td>
+                            <p th:text="${msg.message}" style="max-width: 300px; font-size: 0.85rem; word-break: break-all; margin: 0;"></p>
+                        </td>
+                        <!-- Read Status -->
+                        <td>
+                            <span th:if="${msg.read}" class="badge badge-delivered" style="font-size: 0.65rem;">Read</span>
+                            <span th:unless="${msg.read}" class="badge badge-pending" style="font-size: 0.65rem; font-weight: 700;">Unread</span>
+                        </td>
+                        <!-- Action to Mark Read -->
+                        <td style="text-align: right;">
+                            <form th:unless="${msg.read}" th:action="@{/admin/messages/read/{id}(id=${msg.id})}" method="POST" style="display: inline;">
+                                <button type="submit" class="btn btn-secondary btn-sm" style="padding: 6px 12px; cursor: pointer;">
+                                    <i class="fa-regular fa-envelope-open" style="margin-right: 5px;"></i> Mark Read
+                                </button>
+                            </form>
+                            <span th:if="${msg.read}" class="text-muted" style="font-size: 0.85rem; padding-right: 10px;"><i class="fa-solid fa-check-double"></i></span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>

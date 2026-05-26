@@ -1,0 +1,134 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header-head}"></head>
+<body>
+
+<header th:replace="~{fragments/header :: header}"></header>
+
+<!-- Admin navigation subbar -->
+<div style="background: var(--bg-secondary); border-bottom: 1px solid var(--border-glass); padding: 15px 0;">
+    <div class="container d-flex flex-wrap gap-2">
+        <a th:href="@{/admin/dashboard}" class="btn btn-sm btn-secondary">Dashboard</a>
+        <a th:href="@{/admin/products}" class="btn btn-sm btn-primary">Products</a>
+        <a th:href="@{/admin/categories}" class="btn btn-sm btn-secondary">Categories</a>
+        <a th:href="@{/admin/orders}" class="btn btn-sm btn-secondary">Orders</a>
+        <a th:href="@{/admin/users}" class="btn btn-sm btn-secondary">Customers</a>
+        <a th:href="@{/admin/messages}" class="btn btn-sm btn-secondary">Messages</a>
+    </div>
+</div>
+
+<main class="container py-5">
+    <!-- Header -->
+    <div class="admin-dashboard-header">
+        <div>
+            <span class="admin-breadcrumbs"><a th:href="@{/admin/dashboard}">Dashboard</a> / Products</span>
+            <h1 style="font-family: var(--font-serif); font-size: 2.2rem;">Manage Perfumes</h1>
+        </div>
+        <a th:href="@{/admin/products/add}" class="btn btn-primary"><i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Add New Perfume</a>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <!-- Products List Card -->
+    <div class="admin-card">
+        <div th:if="${#lists.isEmpty(products)}" style="text-align: center; padding: 40px 0;">
+            <i class="fa-solid fa-bottle-droplet" style="font-size: 3.5rem; color: var(--text-muted); margin-bottom: 20px;"></i>
+            <h3 style="font-family: var(--font-serif); margin-bottom: 10px;">No Perfumes Created Yet</h3>
+            <p class="text-muted" style="margin-bottom: 20px;">Start building your catalog by adding your first luxury perfume.</p>
+            <a th:href="@{/admin/products/add}" class="btn btn-primary">Add Product</a>
+        </div>
+
+        <div class="table-responsive" th:unless="${#lists.isEmpty(products)}">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th>Featured</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p : ${products}">
+                        <!-- Image thumbnail -->
+                        <td>
+                            <img th:src="${@fileUploadUtil.resolvePublicUrl(p.imageUrl)}" th:alt="${p.name}" class="image-thumbnail-preview">
+                        </td>
+                        <!-- Details -->
+                        <td>
+                            <strong th:text="${p.name}" style="color: #fff;">Royal Oud Majesty</strong>
+                            <p class="text-muted" th:text="${p.size}" style="font-size: 0.75rem; margin: 0;"></p>
+                        </td>
+                        <!-- Type/Product Info -->
+                        <td>
+                            <th:block th:if="${!p.isDemoProduct()}">
+                                <span class="badge" style="background-color: var(--accent-gold); color: #000; font-size: 0.7rem;">Main Product</span>
+                                <th:block th:if="${demoCounts.get(p.id) != null and demoCounts.get(p.id) > 0}">
+                                    <br>
+                                    <small class="text-muted" style="display: block; margin-top: 4px;">
+                                        <span th:text="'Demos: ' + ${demoCounts.get(p.id)}"></span>
+                                    </small>
+                                </th:block>
+                            </th:block>
+                            <th:block th:if="${p.isDemoProduct()}">
+                                <span class="badge" style="background-color: #7c3aed; color: #fff; font-size: 0.7rem;">Demo Pack</span>
+                                <br>
+                                <small class="text-muted" style="display: block; margin-top: 4px;">
+                                    <span th:if="${parentProducts.get(p.id) != null}" th:text="'Parent: ' + ${parentProducts.get(p.id).name}"></span>
+                                </small>
+                                <small class="text-muted" style="display: block;">
+                                    <span th:if="${p.quantityMl}" th:text="${p.quantityMl} + 'ml'"></span>
+                                </small>
+                            </th:block>
+                        </td>
+                        <!-- Category -->
+                        <td th:text="${p.category != null ? p.category.name : 'Unassigned'}">Oud</td>
+                        <!-- Price -->
+                        <td>
+                            <div style="font-size: 0.95rem;">
+                                <span th:if="${p.discountPrice > 0}" style="text-decoration: line-through; color: var(--text-muted); font-size: 0.8rem; margin-right: 5px;" th:text="'    ' + ${#numbers.formatDecimal(p.price, 1, 'COMMA', 0, 'POINT')}"></span>
+                                <strong th:text="'    ' + ${#numbers.formatDecimal(p.discountPrice > 0 ? p.discountPrice : p.price, 1, 'COMMA', 0, 'POINT')}"></strong>
+                            </div>
+                        </td>
+                        <!-- Stock -->
+                        <td>
+                            <span th:text="${p.stockQuantity}" th:style="${p.stockQuantity <= 5} ? 'color: #e74c3c; font-weight: 600;' : ''">10</span>
+                        </td>
+                        <!-- Active -->
+                        <td>
+                            <span th:if="${p.active}" class="badge badge-delivered" style="font-size: 0.65rem;">Active</span>
+                            <span th:unless="${p.active}" class="badge badge-cancelled" style="font-size: 0.65rem;">Disabled</span>
+                        </td>
+                        <!-- Featured -->
+                        <td>
+                            <span th:if="${p.featured}" style="color: var(--accent-gold); font-size: 1.1rem;"><i class="fa-solid fa-star"></i></span>
+                            <span th:unless="${p.featured}" style="color: var(--text-muted); font-size: 1.1rem;"><i class="fa-regular fa-star"></i></span>
+                        </td>
+                        <!-- Actions -->
+                        <td style="text-align: right;">
+                            <div class="d-flex justify-end gap-1" style="justify-content: flex-end;">
+                                <a th:href="@{/admin/products/edit/{id}(id=${p.id})}" class="btn btn-secondary btn-sm" style="padding: 6px 12px;" th:title="${p.isDemoProduct() ? 'Edit demo product' : 'Edit main product'}"><i class="fa-solid fa-pen-to-square"></i></a>
+                                
+                                <form th:action="@{/admin/products/delete/{id}(id=${p.id})}" method="POST" th:attr="onsubmit=${p.isDemoProduct() ? 'return confirmDelete(&quot;Delete this demo product? This action cannot be undone.&quot;);' : 'return confirmDelete(&quot;Delete this product and its demo packs? This action cannot be undone.&quot;);'}" style="display: inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm" style="padding: 6px 12px; cursor: pointer;"><i class="fa-solid fa-trash-can"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>
+
